@@ -1,15 +1,9 @@
 const axios = require("axios");
 
-const API_ENDPOINT =
-  "https://serverless-tooly-gateway-6n4h522y.ue.gateway.dev/facebook/video";
+const API_ENDPOINT = "https://fsmvid.com/api/proxy";
 
 /**
- * Regex chấp nhận:
- * - facebook.com
- * - m.facebook.com
- * - fb.watch
- * - /share/r/
- * - link app Facebook
+ * Chỉ chấp nhận link Facebook (web + mobile)
  */
 const FB_URL_REGEX =
   /^(https?:\/\/)?(www\.|m\.)?(facebook\.com|fb\.watch)\/.+/i;
@@ -19,7 +13,7 @@ async function fbdown(rawUrl) {
     throw new Error("Thiếu URL");
   }
 
-  // Giải encodeURIComponent (an toàn)
+  // Giải encodeURIComponent an toàn
   let url;
   try {
     url = decodeURIComponent(rawUrl);
@@ -27,25 +21,33 @@ async function fbdown(rawUrl) {
     url = rawUrl;
   }
 
-  // Check regex Facebook
+  // Validate Facebook URL
   if (!FB_URL_REGEX.test(url)) {
     throw new Error("Chỉ hỗ trợ URL Facebook");
   }
 
-  const res = await axios.get(API_ENDPOINT, {
-    params: { url },
-    headers: {
-      "Accept": "*/*",
-      "Accept-Language": "vi-VN,vi;q=0.9,en-US;q=0.6,en;q=0.5",
-      "Origin": "https://chative.io",
-      "Referer": "https://chative.io/",
-      "User-Agent":
-        "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36"
+  const response = await axios.post(
+    API_ENDPOINT,
+    {
+      isHomepage: true,
+      platform: "facebook",
+      url
     },
-    timeout: 15000
-  });
+    {
+      headers: {
+        "Accept": "*/*",
+        "Accept-Language": "vi-VN,vi;q=0.9,en-US;q=0.6,en;q=0.5",
+        "Content-Type": "application/json",
+        "Origin": "https://fsmvid.com",
+        "Referer": "https://fsmvid.com/",
+        "User-Agent":
+          "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36"
+      },
+      timeout: 15000
+    }
+  );
 
-  return res.data;
+  return response.data;
 }
 
 module.exports = fbdown;
